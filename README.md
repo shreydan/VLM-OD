@@ -16,7 +16,7 @@ Updates so far:
     
 Here are the basic results:
 
-
+![outputs](./outputs.png)
 
 
 Still a long way to go, but hey atleast it works :)
