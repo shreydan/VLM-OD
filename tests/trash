@@ -1,0 +1,76 @@
+class LocTokenBlockAverageCallback(TrainerCallback):
+    """
+    Every `interval` steps, divides the <locXXX> tokens into
+    non-overlapping blocks of size (2*radius+1) and averages each block
+    once—so no token is ever averaged twice in one pass.
+    """
+
+    def __init__(self,
+                 processor,
+                 interval: int = 1000,
+                 radius: int = 2,
+                 num_loc_tokens: int = 256):
+        """
+        Args:
+          processor:        your VLM processor (with tokenizer)
+          interval:         how many steps between smoothing passes
+          radius:           neighbors on each side per block
+          num_loc_tokens:   total number of <loc0000>…<locNNNN> tokens
+        """
+        self.interval     = interval
+        self.radius       = radius
+        self.num_loc      = num_loc_tokens
+        self.block_size   = 2 * radius + 1
+
+        # Precompute the exact token IDs for <loc0000>…<locNNNN>
+        self.loc_ids = [
+            processor.tokenizer.convert_tokens_to_ids(f"<loc{idx:04d}>")
+            for idx in range(self.num_loc)
+        ]
+
+    def on_step_end(self, args, state: TrainerState, control: TrainerControl, **kwargs):
+        if state.global_step > 0 and state.global_step % self.interval == 0:
+            model = kwargs.get("model")
+            if model is not None:
+                self._block_average_loc_embeddings(model)
+        return control
+
+    def _block_average_loc_embeddings(self, model):
+        """
+        1) Buffer input & output embeddings separately.
+        2) For each non-overlapping block of size `block_size`, compute its mean.
+        3) Write that mean back to every token in that block—then move on.
+        """
+        # 1) Grab live weight tensors
+        inp_w  = model.get_input_embeddings().weight.data
+        out_w  = model.get_output_embeddings().weight.data
+
+        # 2) Buffer the <loc> block from each
+        orig_inp = inp_w[self.loc_ids].clone()   # [num_loc, D]
+        orig_out = out_w[self.loc_ids].clone()   # [num_loc, D]
+
+        # 3) Iterate in steps of block_size
+        for start in range(0, self.num_loc, self.block_size):
+            end = min(start + self.block_size, self.num_loc)
+            block_range = range(start, end)
+
+            # Compute one average per block
+            avg_inp = orig_inp[list(block_range), :].mean(dim=0)
+            avg_out = orig_out[list(block_range), :].mean(dim=0)
+
+            # Scatter it to every token in that block
+            print('averaging...')
+            for idx in block_range:
+                tok_id = self.loc_ids[idx]
+                print(tok_id,end=' ')
+                inp_w[tok_id]  = avg_inp
+                out_w[tok_id] = avg_out
+            print()
+
+
+callback = LocTokenBlockAverageCallback(
+    processor=processor,
+    interval=1000,
+    radius=2,
+    num_loc_tokens=256
+)
