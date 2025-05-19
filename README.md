@@ -2,6 +2,13 @@
 
 Updates so far:
 
+- `eval2.ipynb`
+    - I trained the model once again, this time with more epochs and all available bboxes in the image
+    - model is biased towards larger bboxes, doesn't bother to generate small bboxes
+    - class imbalance is severe, can't recognize objects of coco with presumably less samples
+    - the model still doesnt understand the concept of the <object> not being present in the image, if we ask it to detect car in a photo of people, it'll generate a random bbox so needs such `not present` samples perhaps
+    - unfortunately, the VLM has lost its original capabilities -- maybe fixable if we had trained with LoRA? I am not sure.
+
 - Training
     - model: [SmolVLM-256M-Instruct](https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct) -- its just a really good model for the size and for the GPU poors, what can I say
     - I trained it on COCO for 7 epochs took about 10hours with < 10gigs of VRAM.
@@ -13,7 +20,7 @@ Updates so far:
     - switched from 1024 tokens to 256 tokens, still the same issue.
     - inspired by [Aritra's Gemma 3 Finetuning](https://x.com/ariG23498/status/1922606702462894531) I then switched to just normal text instead of special tokens.
     - I even considered averaging out embeddings of the special <locXXX> tokens every few steps with their nearby <locXXX> tokens to improve "generalization" but that was trash.
-    
+
 Here are the basic results:
 
 ![outputs](./outputs.png)
