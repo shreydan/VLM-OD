@@ -8,6 +8,7 @@ Updates so far:
     - class imbalance is severe, can't recognize objects of coco with presumably less samples
     - the model still doesnt understand the concept of the <object> not being present in the image, if we ask it to detect car in a photo of people, it'll generate a random bbox so needs such `not present` samples perhaps
     - unfortunately, the VLM has lost its original capabilities -- maybe fixable if we had trained with LoRA? I am not sure.
+    - is terrible at detecting multiple objects in the image, even for the new model which I trained with all bboxes.
 
 - Training
     - model: [SmolVLM-256M-Instruct](https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct) -- its just a really good model for the size and for the GPU poors, what can I say
