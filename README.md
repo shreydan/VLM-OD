@@ -11,6 +11,8 @@
     - unfortunately, the VLM has lost its original capabilities -- maybe fixable if we had trained with LoRA? I am not sure.
     - is terrible at detecting multiple objects in the image, even for the new model which I trained with all bboxes.
 
+---
+
 
 - Training
     - model: [SmolVLM-256M-Instruct](https://huggingface.co/HuggingFaceTB/SmolVLM-256M-Instruct) -- its just a really good model for the size and for the GPU poors, what can I say
@@ -18,6 +20,7 @@
     - As you know there are a LOT of bboxes in 1 COCO image so for each class I chose the bbox with the maximum area to make it easy on the model so its decent at detecting large objects.
     - There's option to enable synonyms as well which I generated for each label to make it "open vocabulary" -- didnt include in this so please update the trainer.py to get rid of that if you want to try it :)
 
+---
 
 - Special Tokens:
     - adding special tokens didn't work unfortunately as this is how the project had started, the model collapsed and never learnt to predict the special tokens.
